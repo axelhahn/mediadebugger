@@ -4,6 +4,8 @@
  * @author    Axel Hahn
  * @version   0.02
  *
+ * Project: https://github.com/axelhahn/mediadebugger
+ * 
  * @this mdbg
  * 
  * @example
