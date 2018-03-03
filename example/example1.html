@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Demo Mediadebugger</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+        <link rel="stylesheet" type="text/css" href="example.css" />
+
+        <style>
+            body{margin: 2em 40% 10em 3em; padding: 1em;}
+
+		#logwindow{width: 30%; background:rgba(0,0,0,0.05); position: fixed; top: 1em; bottom: 0; right: 0; padding: 0.5em;}
+                
+                /* -- div for logging data -- */
+		#logdata{font-size:90%; bottom: 0;overflow: auto; }
+                
+                    /* -- logging types -- */
+                    #logdata .time{display: block; float: left; min-width: 5em;}
+                    #logdata .info{color:#89a;}
+                    #logdata .error{color:#a22; background:#fcd;}
+                    #logdata .event{color:#578;}
+
+                    /* -- colors for defined events -- */
+                    #logdata .pause{color:#060;}
+                    #logdata .play{color:#060;}
+                    #logdata .timeupdate{color:#abc;}
+		
+                /* -- div to show eventnames -- */
+		#allevents{margin-top: 3em; border: 2px dashed #ccc;padding: 1em; box-shadow: 0 0 2em #aaa;}
+		#eventsdiv{font-size:90%;}
+                
+                    /* -- span for each event name -- */
+                    #eventsdiv span{border: 1px dashed #aaa; padding: 0.2em; margin: 0 0.5em 0.5em 0; display:box; float: left; transition: all 0.3s ease-out;}
+
+                    /* -- coloring for fired events  -- */
+                    #eventsdiv span.mark-0{background:#f30; color:#fff;}
+                    #eventsdiv span.mark-1{background:#f30; color:#fda;}
+                    #eventsdiv span.mark-2{background:#f80;background:rgba(255,128,0,1);}
+                    #eventsdiv span.mark-3{background:#fa1;background:rgba(255,128,0,0.8)}
+                    #eventsdiv span.mark-4{background:#fc2;background:rgba(255,128,0,0.7)}
+                    #eventsdiv span.mark-5{background:#fc8;background:rgba(255,128,0,0.6)}
+                    #eventsdiv span.mark-6{background:#fc9;background:rgba(255,128,0,0.5)}
+                    #eventsdiv span.mark-7{background:#fda;background:rgba(255,128,0,0.4)}
+                    #eventsdiv span.mark-8{background:#feb;background:rgba(255,128,0,0.3)}
+                    #eventsdiv span.mark-9{background:#fff0e0;background:rgba(255,128,0,0.2)}			
+		</style>
+    </head>
+    <body>
+        <h1>Demo Mediadebugger :: Beta</h1>
+        <nav>
+            <a href="mediadebugger.html" class="active">Start</a>
+        </nav>
+
+        <!-- ************************************************************** -->
+        
+        <h2>A sample Media tag</h2>
+        <p>
+            Here is an audio tag with controls.<br>
+            Each action fires events which are highlighted below and logged
+            with its time on the right log window.<br>
+            Play around: start/ pause ... seek in the progress bar ... change the volume.
+        </p>
+        <div id="mediaitems"
+>        <audio loop="loop"
+                controls="controls"
+                id="myaudio"
+                style="width: 100%;"
+                >
+                <source src="https://www.axel-hahn.de/axel/download/gimme-a-bit-more_2.0_.ogg" type="audio/ogg"/>
+                <source src="https://www.axel-hahn.de/axel/download/gimme-a-bit-more_2.0_.mp3" type="audio/mp3"/>
+        </audio></div>
+
+	<!--
+		<form>
+			<label for="eUrl">enter audio url to load:</label><br>
+			<input class="input" type="text" value="" id="eUrl" name="url" size="100">
+			<button>Go</button>
+			<button class="restart" onclick="location.href='?'; return false;">X</button>
+			<br>
+			<br>
+			<label>
+				<input type="checkbox" value="1" id="cbAutioplay" name="autoplay">
+				Autostart
+			</label><br>
+		</form>
+	-->
+	
+		<!--
+                <video
+			controls="controls"
+			id="myvideo"
+                    >
+                    <source src="https://example.org/video/big_buck_bunny.mp4">
+                </video>
+                 --> 
+			
+        <!-- ************************************************************** -->
+
+                <h2>Output window for fired events</h2>
+		<div id="details">
+			<div id="allevents">
+				<span class="divlabel">Events:</span><br>
+				<br>
+				<div id="eventsdiv"></div>
+			</div>
+		</div>
+                
+                <h2>Sourcecode</h2>
+                
+                <p>
+                    Source code of media tag
+                </p>
+                <pre id="sourceAudio">[source of audio]</pre>
+                <p>
+                    Source code to add media debugger
+                </p>
+                <pre id="sourceJs">[source of audio]</pre>
+
+                <div id="logwindow">
+                        <span class="divlabel">Log:</span><br>
+                        <br>
+                        <div id="logdata">Logdata-Area</div>	
+                </div>
+
+        
+        <!-- ************************************************************** -->
+        
+
+            <div id="js4mediadebugger">
+		<script src="../mediadebugger.js"></script>
+                <script>
+                    // step 1: init
+                    var oDebugger=new mdbg();
+                    oDebugger.init();
+                    
+                    // step 2: set outot divs: 
+                    // one for logging output ... one for highlighting events
+                    oDebugger.setOutputLogs(document.getElementById('logdata'));
+                    oDebugger.setOutputEvents(document.getElementById('eventsdiv'));
+                    
+                    // step 3
+                    // attach media objects; you also can 
+                    // - add multiple media objects
+                    // - mix audio and video tags
+                    oDebugger.attach(document.getElementById('myaudio'));
+                    // oDebugger.attach(document.getElementById('myvideo'));
+                </script>
+            </div>
+                <script>
+                    // --- functions for this demo page only
+                    document.getElementById('sourceAudio').innerHTML=document.getElementById("mediaitems").innerHTML.replace(/</g, '&lt;');
+                    document.getElementById('sourceJs').innerHTML=document.getElementById("js4mediadebugger").innerHTML.replace(/</g, '&lt;');
+                    
+                </script>
+
+		<br /><br />
+        <!--
+        <hr>
+        DOCS: <a href="https://www.axel-hahn.de/docs/amcplayer/index.htm" target="_blank">https://www.axel-hahn.de/docs/amcplayer/index.htm</a>        
+        -->
+    </body>
+</html>
