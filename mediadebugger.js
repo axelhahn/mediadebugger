@@ -2,7 +2,7 @@
  * media debugger
  * 
  * @author    Axel Hahn
- * @version   0.02
+ * @version   0.03
  *
  * Project: https://github.com/axelhahn/mediadebugger
  * 
@@ -24,6 +24,7 @@
 var mdbg = function () {
 
     this._oDivEvents = false;  // output div for events
+    this._oDivProperties = false;  // output div for properties
     this._oDivLog = false;     // output div for logs
 
     this._aLogs = false;       // array with log entries
@@ -33,33 +34,27 @@ var mdbg = function () {
     this.starttime = false;    // timestamp of start
     this.name = false;         // name of the current instance
 
-    // evensts of audio and video tags
-    this._aVartypes = {
-        0: 'bool',
-        1: 'integer',
-        2: 'float',
-        3: 'char',
-        4: 'string',
-        5: 'array',
-        6: 'object',
-        99: 'unknown'
-    };
-
     // https://www.w3schools.com/TAGS/ref_av_dom.asp
     this._aConst = {
         'properties': {
-            'audioTracks': {'type': 6},
-            'autoplay': {'type': 0},
-            'buffered': {'type': 6, 'readonly': true},
-            'controller': {'type': 6},
-            'controls': {'type': 6},
-            'crossOrigin': {'type': 6},
-            'currentSrc': {'type': 4},
-            'currentTime': {'type': 2},
-            'defaultMuted': {'type': 2},
+            'audioTracks': {}, // for video only
+            'autoplay': {},
+            'buffered': {'readonly': true},
+            'controller': {},
+            'controls': {},
+            'crossOrigin': {},
+            'currentSrc': {},
+            'currentTime': {},
+            'defaultMuted': {},
+            'defaultPlaybackRate': {},
+            'duration': {},
+            'ended': {},
+            'error': {},
+            'loop': {},
+            'mediaGroup': {},
+            'muted': {},
 
             'networkState': {
-                'type': 3,
                 'values': [
                     '0 = NETWORK_EMPTY - audio/video has not yet been initialized',
                     '1 = NETWORK_IDLE - audio/video is active and has selected a resource, but is not using the network',
@@ -67,6 +62,11 @@ var mdbg = function () {
                     '3 = NETWORK_NO_SOURCE - no audio/video source found'
                 ]
             },
+            'paused': {},
+            'playbackRate': {},
+            'played': {},
+            'preload': {},
+            
             'readyState': {
                 'values': [
                     '0 = HAVE_NOTHING - no information whether or not the audio/video is ready',
@@ -75,7 +75,14 @@ var mdbg = function () {
                     '3 = HAVE_FUTURE_DATA - data for the current and at least the next frame is available',
                     '4 = HAVE_ENOUGH_DATA - enough data available to start playing'
                 ]
-            }
+            },
+            'seekable': {},
+            'src': {},
+            'startDate': {},
+            'textTracks': {},
+            'videoTracks': {},
+            'volume': {}
+            
         },
         'eventnames': [
             'abort',
@@ -109,6 +116,23 @@ var mdbg = function () {
     // private functions
     // ----------------------------------------------------------------------
 
+    /**
+     * get id in dom for a property 
+     * @private
+     * @param {integer} iMediaId     id of attached media (0..N)
+     * @param {string} propertyname  name of the media property
+     * @returns {String}
+     */
+    this._getId4Property = function (iMediaId, propertyname) {
+        return 'span-' + iMediaId+'-'+propertyname;
+    };
+
+
+    /**
+     * helper function: create span tags for each media event
+     * @private
+     * @returns {Boolean}
+     */
     this._addSpansForEachEvent = function () {
         if (!this._oDivEvents) {
             return false;
@@ -119,10 +143,82 @@ var mdbg = function () {
             sHtml += '<span id="span-' + eventname + '" class="event">' + eventname + '</span> ';
         }
         this._oDivEvents.innerHTML = sHtml + '<div style="clear: both;"></div>';
+    };
+    /**
+     * helper function: create span tags for each media property
+     * @private
+     * @param {integer} iMediaId     id of attached media (0..N)
+     * @returns {Boolean}
+     */
+    this._addSpansForEachProperty = function (iMediaId) {
+        if (!this._oDivProperties) {
+            return false;
+        }
+        var sHtml = '';
+        sHtml = '<h4>media'+iMediaId+'</h4>';
+        for (var propertyname in this._aConst.properties) {
+            sHtml += '<span id="' + this._getId4Property(iMediaId, propertyname) + '" class="event">' + propertyname + '</span> ';
+        }
+        sHtml += '<div style="clear: both;"></div>';
+        this._oDivProperties.innerHTML = sHtml;
+
+    };
+    /**
+     * helper function: get properties of media object and update property spans
+     * @private
+     * @param {integer} iMediaId     id of attached media (0..N)
+     * @returns {Boolean}
+     */
+    this._updateMediaProperties = function (iMediaId) {
+        if (!this._oDivProperties) {
+            return false;
+        }
+        for (var propertyname in this._aConst.properties) {
+            var oSpan=document.getElementById(this._getId4Property(iMediaId, propertyname));
+            var currentValue=eval("this._aMedia[iMediaId]." + propertyname);
+            var Value2Show=currentValue;
+            var typeclass='';
+            var regexFloat=/^[0-9]*\.[0-9]*$/;
+            if(Value2Show === null){
+                typeclass='null';
+                Value2Show='';
+            } else {
+                if(typeof Value2Show === 'undefined'){
+                    typeclass='undefined';
+                    Value2Show='-';
+                }
+                if(typeof Value2Show === 'object'){
+                    typeclass='object';
+                    Value2Show=JSON.stringify(Value2Show);
+                }
+                if(Value2Show % 1 === 0){
+                    typeclass='integer';
+                }
+                if(Value2Show===true | Value2Show===false){
+                    typeclass='boolean';
+                }
+                if(!typeclass){
+                    typeclass='string';
+                    if (regexFloat.test(Value2Show) ){
+                        typeclass='float';
+                    }
+                }
+            }
+            Value2Show = propertyname +' = <span class="type-'+typeclass+'">' + Value2Show + '</span> ('+typeclass+')';
+            if (oSpan.innerHTML !== Value2Show){
+                oSpan.innerHTML=Value2Show;
+                oSpan.className='event mark-0';
+            }
+        }
 
     };
 
-
+    /**
+     * helper function: attach all events to media object in dom to fetch all updates
+     * @private
+     * @param {integer} iMediaId     id of attached media (0..N)
+     * @returns {Boolean}
+     */
     this._attachEachEvent = function (iMediaId) {
         if (!this._aMedia.length || iMediaId > this._aMedia.length) {
             console.log('ERROR in _attachEachEvent: media id ' + iMediaId + ' is wrong: no media or id larger than count.');
@@ -139,6 +235,11 @@ var mdbg = function () {
         this.log('info', 'debugger', 'events were added to media'+iMediaId);
     };
 
+    /**
+     * helper function: get microtime (= in milliseconds) since init
+     * @param {type} get_as_float
+     * @returns {Number|String}
+     */
     this._microtime = function (get_as_float) {
         var now = new Date().getTime() / 1000;
         var s = parseInt(now);
@@ -146,7 +247,7 @@ var mdbg = function () {
     };
 
     /**
-     * internal helper function - called in init()
+     * helper function - called in init()
      * it detects the name of the ocject variable that initialized the player
      * i.e. on var oMcPlayer=new mcPlayer();
      * it returns "oMcPlayer"
@@ -175,6 +276,13 @@ var mdbg = function () {
         return this.name;
     };
 
+    /**
+     * helper function: rotate css clases named "mark"+number
+     * @private
+     * @param {string}  sClass  name of css class
+     * @param {integer} iMax    max number
+     * @returns {undefined}
+     */
     this._rotateCLass = function (sClass, iMax) {
         for (var i = iMax; i > -1; i--) {
             var sCurrentClass = sClass + '-' + i;
@@ -183,7 +291,6 @@ var mdbg = function () {
             for (var j = 0; j < aObj.length; j++) {
                 aObj[j].className = aObj[j].className.replace(sCurrentClass, sNextClass);
             }
-
         }
     };
 
@@ -219,6 +326,7 @@ var mdbg = function () {
             readyState: 0
         });
         this._attachEachEvent(this._aMedia.length - 1);
+        this._addSpansForEachProperty(this._aMedia.length - 1);
     };
 
     /**
@@ -240,6 +348,22 @@ var mdbg = function () {
     };
     /**
      * set div where to show the logs
+     * @param {object} oDiv  div for output of events
+     * @return {boolean}
+     */
+    this.setOutputProperties = function (oDiv) {
+        if (!oDiv || !oDiv.tagName || !oDiv.tagName === 'DIV') {
+            console.log('ERROR in setOutputProperties: no div tag');
+            console.log(oDiv);
+            return false;
+        }
+        this._oDivProperties = oDiv;
+
+        // TODO: draw all known event names
+        return true;
+    };
+    /**
+     * set div where to show the logs
      * @param {object} oDiv  div for output of logs
      * @return {boolean}
      */
@@ -254,8 +378,22 @@ var mdbg = function () {
         return true;
     };
 
+    /**
+     * callback function for added event listeners
+     * it gets the last vent log and 
+     * - adds log entry
+     * - updates events
+     * - updates properties
+     * 
+     * @param {type} evt
+     * @param {type} iMediaId
+     * @returns {undefined}
+     */
     this.fireListener = function (evt, iMediaId) {
+        
         this._markEvent(evt.type);
+        this._updateMediaProperties(iMediaId);
+        
         this.log('event ' + evt.type, 'media' + iMediaId, 'event ' + evt.type);
         
         // check states
@@ -265,38 +403,14 @@ var mdbg = function () {
         var iNetworkState=this._aMedia[iMediaId]['networkState'];
         if (iLastReadyState !== iReadyState){
             this.log('state readyState', 'media' + iMediaId, 'readyState switched from '+iLastReadyState + ' to '+this._aConst.properties.readyState.values[iReadyState]);
-            /*
-            if(iReadyState===4){
-                this.log('state readyState', 'media' + iMediaId, 'Browser is ready to play');
-            }
-            // log('Browser can start to play (enough data)', 'readytoplay');
-            */
             this._aMediaLastvar[iMediaId]['readyState']=iReadyState;
              
          }
         if (iLastNetworkState !== iNetworkState){
             this.log('state networkState', 'media' + iMediaId, 'networkState switched from '+iLastNetworkState + ' to '+this._aConst.properties.networkState.values[iNetworkState]);
-            /*
-            if(iReadyState===4){
-                this.log('state readyState', 'media' + iMediaId, 'Browser is ready to play');
-            }
-            // log('Browser can start to play (enough data)', 'readytoplay');
-            */
             this._aMediaLastvar[iMediaId]['networkState']=iNetworkState;
              
          }
-         /*
-         if (this._aMediaLastvar[iMediaId]['readyState'] !== oAudio.readyState){
-         log('readyState switched from '+readyState + ' to '+aReadyState[oAudio.readyState], 'networkstate');
-         log('Browser can start to play (enough data)', 'readytoplay');
-         readyState=oAudio.readyState;
-         }
-         if(oAudio.networkState!==netWorkState){
-         log('networkState switched from '+netWorkState + ' to '+aNetworkState[oAudio.networkState], 'networkstate');
-         netWorkState=oAudio.networkState;
-         }
-         */
-
     };
 
     // ----------------------------------------------------------------------

@@ -31,19 +31,29 @@
 		#eventsdiv{font-size:90%;}
                 
                     /* -- span for each event name -- */
-                    #eventsdiv span{border: 1px dashed #aaa; padding: 0.2em; margin: 0 0.5em 0.5em 0; display:box; float: left; transition: all 0.3s ease-out;}
+                    #allevents span.divlabel{background:#ace; border: 1px dashed #aaa; padding: 0.2em; margin: 0 0.5em 0.5em 0; display:box; }
+                    #allevents span.event{border: 1px dashed #aaa; padding: 0.2em; margin: 0 0.5em 0.5em 0; display:box; float: left; transition: all 0.3s ease-out;}
 
                     /* -- coloring for fired events  -- */
-                    #eventsdiv span.mark-0{background:#f30; color:#fff;}
-                    #eventsdiv span.mark-1{background:#f30; color:#fda;}
-                    #eventsdiv span.mark-2{background:#f80;background:rgba(255,128,0,1);}
-                    #eventsdiv span.mark-3{background:#fa1;background:rgba(255,128,0,0.8)}
-                    #eventsdiv span.mark-4{background:#fc2;background:rgba(255,128,0,0.7)}
-                    #eventsdiv span.mark-5{background:#fc8;background:rgba(255,128,0,0.6)}
-                    #eventsdiv span.mark-6{background:#fc9;background:rgba(255,128,0,0.5)}
-                    #eventsdiv span.mark-7{background:#fda;background:rgba(255,128,0,0.4)}
-                    #eventsdiv span.mark-8{background:#feb;background:rgba(255,128,0,0.3)}
-                    #eventsdiv span.mark-9{background:#fff0e0;background:rgba(255,128,0,0.2)}			
+                    #allevents span.mark-0{background:#f30; color:#fff;}
+                    #allevents span.mark-1{background:#f30; color:#fda;}
+                    #allevents span.mark-2{background:#f80;background:rgba(255,128,0,1);}
+                    #allevents span.mark-3{background:#fa1;background:rgba(255,128,0,0.8)}
+                    #allevents span.mark-4{background:#fc2;background:rgba(255,128,0,0.7)}
+                    #allevents span.mark-5{background:#fc8;background:rgba(255,128,0,0.6)}
+                    #allevents span.mark-6{background:#fc9;background:rgba(255,128,0,0.5)}
+                    #allevents span.mark-7{background:#fda;background:rgba(255,128,0,0.4)}
+                    #allevents span.mark-8{background:#feb;background:rgba(255,128,0,0.3)}
+                    #allevents span.mark-9{background:#fff0e0;background:rgba(255,128,0,0.2)}
+                    
+                    #allevents span.type-boolean{color:#080;}
+                    #allevents span.type-float{background:#fcf; color:#808;}
+                    #allevents span.type-integer{color:#080;}
+                    #allevents span.type-string{color:#008;}
+                    #allevents span.type-string::before,
+                    #allevents span.type-string::after{content: '"';}
+                    #allevents span.type-null{color:#080; font-style: italic;}
+                    #allevents span.type-undefined{color:#ccc; font-style: italic;}
 		</style>
     </head>
     <body>
@@ -99,11 +109,13 @@
 
                 <h2>Output window for fired events</h2>
 		<div id="details">
-			<div id="allevents">
-				<span class="divlabel">Events:</span><br>
-				<br>
-				<div id="eventsdiv"></div>
-			</div>
+                    <div id="allevents">
+                        <h3>Events:</h3>
+                        <div id="eventsdiv"></div>
+
+                        <h3>Properties:</h3>
+                        <div id="propertydiv"></div>
+                    </div>
 		</div>
                 
                 <h2>Sourcecode</h2>
@@ -134,10 +146,10 @@
                     var oDebugger=new mdbg();
                     oDebugger.init();
                     
-                    // step 2: set outot divs: 
-                    // one for logging output ... one for highlighting events
+                    // step 2: set output divs: 
                     oDebugger.setOutputLogs(document.getElementById('logdata'));
                     oDebugger.setOutputEvents(document.getElementById('eventsdiv'));
+                    oDebugger.setOutputProperties(document.getElementById('propertydiv'));
                     
                     // step 3
                     // attach media objects; you also can 
