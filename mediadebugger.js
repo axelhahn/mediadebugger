@@ -2,7 +2,7 @@
  * media debugger
  * 
  * @author    Axel Hahn
- * @version   0.03
+ * @version   0.04
  *
  * Project: https://github.com/axelhahn/mediadebugger
  * 
@@ -154,9 +154,11 @@ var mdbg = function () {
         if (!this._oDivProperties) {
             return false;
         }
-        var sHtml = '';
+        var sHtml = '',
+                propertyname=false
+                ;
         sHtml = '<h4>media'+iMediaId+'</h4>';
-        for (var propertyname in this._aConst.properties) {
+        for (propertyname in this._aConst.properties) {
             sHtml += '<span id="' + this._getId4Property(iMediaId, propertyname) + '" class="event">' + propertyname + '</span> ';
         }
         sHtml += '<div style="clear: both;"></div>';
@@ -173,12 +175,16 @@ var mdbg = function () {
         if (!this._oDivProperties) {
             return false;
         }
+        var regexFloat=/^[0-9]*\.[0-9]*$/,
+                oSpan=false,
+                currentValue=false,
+                typeclass=false
+                ;
         for (var propertyname in this._aConst.properties) {
-            var oSpan=document.getElementById(this._getId4Property(iMediaId, propertyname));
-            var currentValue=eval("this._aMedia[iMediaId]." + propertyname);
-            var Value2Show=currentValue;
-            var typeclass='';
-            var regexFloat=/^[0-9]*\.[0-9]*$/;
+            oSpan=document.getElementById(this._getId4Property(iMediaId, propertyname));
+            currentValue=eval("this._aMedia[iMediaId]." + propertyname);
+            Value2Show=currentValue;
+            typeclass='';
             if(Value2Show === null){
                 typeclass='null';
                 Value2Show='';
@@ -224,9 +230,12 @@ var mdbg = function () {
             console.log('ERROR in _attachEachEvent: media id ' + iMediaId + ' is wrong: no media or id larger than count.');
             return false;
         }
+        var i=false,
+            eventname=false
+        ;
         var selfobject = this;
-        for (var i = 0; i < this._aConst.eventnames.length; i++) {
-            var eventname = this._aConst.eventnames[i];
+        for (i = 0; i < this._aConst.eventnames.length; i++) {
+            eventname = this._aConst.eventnames[i];
 
             this._aMedia[iMediaId].addEventListener(eventname, function (event) {
                 selfobject.fireListener(event, iMediaId);
@@ -284,11 +293,17 @@ var mdbg = function () {
      * @returns {undefined}
      */
     this._rotateCLass = function (sClass, iMax) {
-        for (var i = iMax; i > -1; i--) {
-            var sCurrentClass = sClass + '-' + i;
-            var sNextClass = (i === (iMax) ? '' : sClass + '-' + (i + 1));
-            var aObj = document.getElementsByClassName(sCurrentClass);
-            for (var j = 0; j < aObj.length; j++) {
+        var i=false, 
+            j=false,
+            aObj=false,
+            sCurrentClass=false,
+            sNextClass=false
+            ;
+        for (i = iMax; i > -1; i--) {
+            sCurrentClass = sClass + '-' + i;
+            sNextClass = (i === (iMax) ? '' : sClass + '-' + (i + 1));
+            aObj = document.getElementsByClassName(sCurrentClass);
+            for (j = 0; j < aObj.length; j++) {
                 aObj[j].className = aObj[j].className.replace(sCurrentClass, sNextClass);
             }
         }
@@ -300,7 +315,7 @@ var mdbg = function () {
      * @returns {undefined}
      */
     this._markEvent = function (sEvent) {
-        this._rotateCLass('mark', 10);
+        //this._rotateCLass('mark', 10);
         oSpan = document.getElementById('span-' + sEvent);
         oSpan.className = 'event mark-0';
     };
@@ -359,7 +374,6 @@ var mdbg = function () {
         }
         this._oDivProperties = oDiv;
 
-        // TODO: draw all known event names
         return true;
     };
     /**
@@ -390,6 +404,9 @@ var mdbg = function () {
      * @returns {undefined}
      */
     this.fireListener = function (evt, iMediaId) {
+                
+        this._rotateCLass('mark', 10);
+        this._rotateCLass('mark', 10);
         
         this._markEvent(evt.type);
         this._updateMediaProperties(iMediaId);
@@ -438,12 +455,15 @@ var mdbg = function () {
     /**
      * display log content
      */
-    this.showlog = function () {
+    this.showlog = function (iCount) {
         if (!this._oDivLog) {
             return false;
         }
+        if(!iCount){
+            iCount=50;
+        }
         var sLogs = '';
-        for (var i = (this._aLogs.length - 1); i >= 0; i--) {
+        for (var i = (this._aLogs.length - 1); i >= Math.max(0, (this._aLogs.length - iCount)); i--) {
             sLogs += '<div class="' + this._aLogs[i]['type'] + '">'
                     + '<span class="time">' + this._aLogs[i]['time'] + '</span>'
                     + '<span class="source">' + this._aLogs[i]['source'] + '</span> '
@@ -456,7 +476,6 @@ var mdbg = function () {
 
     this.init = function () {
         this._getName();
-        console.log(this.name);
         this._aLogs = [];
         this.starttime = this._microtime(true);
         this.log('info', 'debugger', 'START');
